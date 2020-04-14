@@ -7,7 +7,7 @@ import (
 // Log linter
 var Log *Logging
 
-func main() {
+func init() {
 	Log = newLogging()
 	// logging = newLogger()
 }
@@ -26,4 +26,8 @@ func Info(v ...interface{}) {
 func Fatal(v ...interface{}) {
 	Log.ERROR(v...)
 	os.Exit(1)
+}
+
+func main() {
+
 }
