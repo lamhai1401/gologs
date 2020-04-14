@@ -5,25 +5,25 @@ import (
 )
 
 // Log linter
-var logging *Logging
+var Log *Logging
 
 func init() {
-	logging = newLogging()
+	Log = newLogging()
 	// logging = newLogger()
 }
 
 // Error export error log
 func Error(v ...interface{}) {
-	logging.ERROR(v...)
+	Log.ERROR(v...)
 }
 
 // Info export none error log
 func Info(v ...interface{}) {
-	logging.INFO(v...)
+	Log.INFO(v...)
 }
 
 // Fatal linter
 func Fatal(v ...interface{}) {
-	logging.ERROR(v...)
+	Log.ERROR(v...)
 	os.Exit(1)
 }
