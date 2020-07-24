@@ -1,14 +1,14 @@
 package logs
 
 import (
-	"os"
+	"github.com/lamhai1401/gologs/logger"
 )
 
 // Log linter
-var Log *Logging
+var Log logger.Log
 
 func init() {
-	Log = newLogging()
+	Log = logger.NewFactorLog()
 	// logging = newLogger()
 }
 
@@ -22,8 +22,17 @@ func Info(v ...interface{}) {
 	Log.INFO(v...)
 }
 
-// Fatal linter
-func Fatal(v ...interface{}) {
-	Log.ERROR(v...)
-	os.Exit(1)
+// Debug export none error log
+func Debug(v ...interface{}) {
+	Log.DEBUG(v...)
+}
+
+// Warn export none error log
+func Warn(v ...interface{}) {
+	Log.WARN(v...)
+}
+
+// Stack linter
+func Stack(v ...interface{}) {
+	Log.STACK(v...)
 }
