@@ -106,11 +106,11 @@ func (n *Node) NewConn(signalID string) error {
 
 	n.setConn(conn)
 
-	if err := n.CreateAudioTrack("audio"); err != nil {
+	if err := n.CreateAudioTrack("audio", 96); err != nil {
 		return err
 	}
 
-	if err := n.CreateVideoTrack("video"); err != nil {
+	if err := n.CreateVideoTrack("video", 100); err != nil {
 		return err
 	}
 
@@ -118,9 +118,9 @@ func (n *Node) NewConn(signalID string) error {
 }
 
 // CreateAudioTrack linter
-func (n *Node) CreateAudioTrack(trackID string) error {
+func (n *Node) CreateAudioTrack(trackID string, codesc uint8) error {
 	if conn := n.getConn(); conn != nil {
-		localTrack, err := conn.NewTrack(webrtc.DefaultPayloadTypeOpus, rand.Uint32(), trackID, trackID)
+		localTrack, err := conn.NewTrack(codesc, rand.Uint32(), trackID, trackID)
 		if err != nil {
 			return err
 		}
@@ -136,9 +136,9 @@ func (n *Node) CreateAudioTrack(trackID string) error {
 }
 
 // CreateVideoTrack linter
-func (n *Node) CreateVideoTrack(seatID string) error {
+func (n *Node) CreateVideoTrack(seatID string, codesc uint8) error {
 	if conn := n.getConn(); conn != nil {
-		localTrack, err := conn.NewTrack(webrtc.DefaultPayloadTypeVP8, rand.Uint32(), seatID, seatID)
+		localTrack, err := conn.NewTrack(codesc, rand.Uint32(), seatID, seatID)
 		if err != nil {
 			return err
 		}
@@ -420,6 +420,11 @@ func (n *Node) handleSDPEvent(signalID string, values interface{}) error {
 		panic("Offer contained no video codecs")
 	}
 
+	audioCodecs := mediaEngine.GetCodecsByKind(webrtc.RTPCodecTypeAudio)
+	if len(audioCodecs) == 0 {
+		panic("Offer contained no audio codecs")
+	}
+
 	//Configure required extensions
 
 	sdes, _ := url.Parse(sdp.SDESRTPStreamIDURI)
@@ -454,11 +459,11 @@ func (n *Node) handleSDPEvent(signalID string, values interface{}) error {
 		}
 		n.setConn(conn)
 
-		if err := n.CreateAudioTrack("audio"); err != nil {
+		if err := n.CreateAudioTrack("audio", audioCodecs[0].PayloadType); err != nil {
 			return err
 		}
 
-		if err := n.CreateVideoTrack("video"); err != nil {
+		if err := n.CreateVideoTrack("video", videoCodecs[0].PayloadType); err != nil {
 			return err
 		}
 
