@@ -87,3 +87,37 @@ func (n *Node) setCacheIce() error {
 	}
 	return nil
 }
+
+func (n *Node) getSessionID() string {
+	n.mutex.RLock()
+	defer n.mutex.RUnlock()
+	return n.sessionID
+}
+
+func (n *Node) setSessionID(s string) {
+	n.mutex.Lock()
+	defer n.mutex.Unlock()
+	n.sessionID = s
+}
+
+func (n *Node) getLocalAudioTrack() *webrtc.Track {
+	return n.localAudioTrack
+}
+
+func (n *Node) setLocalAudioTrack(t *webrtc.Track) {
+	n.mutex.Lock()
+	defer n.mutex.Unlock()
+	n.localAudioTrack = t
+}
+
+func (n *Node) getLocalVideoTrack() *webrtc.Track {
+	n.mutex.RLock()
+	defer n.mutex.RUnlock()
+	return n.localVideoTrack
+}
+
+func (n *Node) setLocalVideoTrack(t *webrtc.Track) {
+	n.mutex.Lock()
+	defer n.mutex.Unlock()
+	n.localVideoTrack = t
+}

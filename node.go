@@ -27,6 +27,7 @@ type Node struct {
 	localVideoTrack *webrtc.Track
 	localAudioTrack *webrtc.Track
 	signl           *signal.Signal
+	sessionID       string
 	conn            *webrtc.PeerConnection
 	mutex           sync.RWMutex
 }
@@ -69,7 +70,13 @@ func (n *Node) handleMsg(values []interface{}) {
 		// if err := n.AddSDP(values[2], signalID); err != nil {
 		// 	log.Println(fmt.Sprintf("Wss sdp err: %s", err.Error()))
 		// }
-		if err := n.handleSDPEvent(signalID, values[2]); err != nil {
+
+		sessionID, isSessionID := values[3].(string)
+		if !isSessionID {
+			return
+		}
+
+		if err := n.handleSDPEvent(signalID, values[2], sessionID); err != nil {
 			log.Println(fmt.Sprintf("Wss sdp err: %s", err.Error()))
 		}
 		break
@@ -153,28 +160,6 @@ func (n *Node) CreateVideoTrack(seatID string, codesc uint8) error {
 	return fmt.Errorf("cannot create video track because rtc connection is nil")
 }
 
-func (n *Node) getLocalAudioTrack() *webrtc.Track {
-	return n.localAudioTrack
-}
-
-func (n *Node) setLocalAudioTrack(t *webrtc.Track) {
-	n.mutex.Lock()
-	defer n.mutex.Unlock()
-	n.localAudioTrack = t
-}
-
-func (n *Node) getLocalVideoTrack() *webrtc.Track {
-	n.mutex.RLock()
-	defer n.mutex.RUnlock()
-	return n.localVideoTrack
-}
-
-func (n *Node) setLocalVideoTrack(t *webrtc.Track) {
-	n.mutex.Lock()
-	defer n.mutex.Unlock()
-	n.localVideoTrack = t
-}
-
 func (n *Node) handlePeerEvent(signalID string, conn *webrtc.PeerConnection) {
 	conn.OnICECandidate(func(i *webrtc.ICECandidate) {
 		if i == nil {
@@ -197,7 +182,6 @@ func (n *Node) handlePeerEvent(signalID string, conn *webrtc.PeerConnection) {
 		var localTrack *webrtc.Track
 
 		fmt.Println(remoteTrack.Codec())
-		fmt.Println("RID: ", remoteTrack.RID())
 		if remoteTrack.Kind().String() == "video" {
 			go func() {
 				ticker := time.NewTicker(time.Millisecond * 500)
@@ -392,67 +376,71 @@ func (n *Node) GetLocalDescription() (*webrtc.SessionDescription, error) {
 	return conn.LocalDescription(), nil
 }
 
-func (n *Node) handleSDPEvent(signalID string, values interface{}) error {
-	// parse sdp
-	var data utils.SDPTemp
-	err := mapstructure.Decode(values, &data)
-	if err != nil {
-		return err
-	}
+func (n *Node) handleSDPEvent(signalID string, values interface{}, sessionID string) error {
+	var conn *webrtc.PeerConnection
+	var err error
 
-	offer := &webrtc.SessionDescription{
-		Type: utils.NewSDPType(data.Type),
-		SDP:  data.SDP,
-	}
+	if n.getSessionID() == sessionID {
+		conn = n.getConn()
+	} else {
+		// parse sdp
+		var data utils.SDPTemp
+		err = mapstructure.Decode(values, &data)
+		if err != nil {
+			return err
+		}
 
-	mediaEngine := &webrtc.MediaEngine{}
-	// mediaEngine.RegisterCodec(webrtc.NewRTPOpusCodec(webrtc.DefaultPayloadTypeOpus, 48000))
-	// mediaEngine.RegisterCodec(webrtc.NewRTPVP8Codec(webrtc.DefaultPayloadTypeVP8, 90000))
+		offer := &webrtc.SessionDescription{
+			Type: utils.NewSDPType(data.Type),
+			SDP:  data.SDP,
+		}
 
-	// parse sdp
-	err = mediaEngine.PopulateFromSDP(*offer)
-	if err != nil {
-		panic(err)
-	}
+		mediaEngine := &webrtc.MediaEngine{}
+		// mediaEngine.RegisterCodec(webrtc.NewRTPOpusCodec(webrtc.DefaultPayloadTypeOpus, 48000))
+		// mediaEngine.RegisterCodec(webrtc.NewRTPVP8Codec(webrtc.DefaultPayloadTypeVP8, 90000))
 
-	videoCodecs := mediaEngine.GetCodecsByKind(webrtc.RTPCodecTypeVideo)
-	if len(videoCodecs) == 0 {
-		panic("Offer contained no video codecs")
-	}
+		// parse sdp
+		err = mediaEngine.PopulateFromSDP(*offer)
+		if err != nil {
+			panic(err)
+		}
 
-	audioCodecs := mediaEngine.GetCodecsByKind(webrtc.RTPCodecTypeAudio)
-	if len(audioCodecs) == 0 {
-		panic("Offer contained no audio codecs")
-	}
+		videoCodecs := mediaEngine.GetCodecsByKind(webrtc.RTPCodecTypeVideo)
+		if len(videoCodecs) == 0 {
+			panic("Offer contained no video codecs")
+		}
 
-	//Configure required extensions
+		audioCodecs := mediaEngine.GetCodecsByKind(webrtc.RTPCodecTypeAudio)
+		if len(audioCodecs) == 0 {
+			panic("Offer contained no audio codecs")
+		}
 
-	sdes, _ := url.Parse(sdp.SDESRTPStreamIDURI)
-	sdedMid, _ := url.Parse(sdp.SDESMidURI)
-	exts := []sdp.ExtMap{
-		{
-			URI: sdes,
-		},
-		{
-			URI: sdedMid,
-		},
-	}
+		//Configure required extensions
 
-	se := webrtc.SettingEngine{}
-	se.AddSDPExtensions(webrtc.SDPSectionVideo, exts)
-	se.AddSDPExtensions(webrtc.SDPSectionAudio, exts)
+		sdes, _ := url.Parse(sdp.SDESRTPStreamIDURI)
+		sdedMid, _ := url.Parse(sdp.SDESMidURI)
+		exts := []sdp.ExtMap{
+			{
+				URI: sdes,
+			},
+			{
+				URI: sdedMid,
+			},
+		}
 
-	// add setting engine
-	settingEngine := &webrtc.SettingEngine{}
-	// settingEngine.SetEphemeralUDPPortRange(20000, 60000)
-	settingEngine.SetICETimeouts(10*time.Second, 20*time.Second, 1*time.Second)
+		se := webrtc.SettingEngine{}
+		se.AddSDPExtensions(webrtc.SDPSectionVideo, exts)
+		se.AddSDPExtensions(webrtc.SDPSectionAudio, exts)
 
-	api := webrtc.NewAPI(webrtc.WithMediaEngine(*mediaEngine), webrtc.WithSettingEngine((se)))
+		// add setting engine
+		settingEngine := &webrtc.SettingEngine{}
+		// settingEngine.SetEphemeralUDPPortRange(20000, 60000)
+		settingEngine.SetICETimeouts(10*time.Second, 20*time.Second, 1*time.Second)
 
-	// Create a new RTCPeerConnection
+		api := webrtc.NewAPI(webrtc.WithMediaEngine(*mediaEngine), webrtc.WithSettingEngine((se)))
 
-	conn := n.getConn()
-	if conn == nil {
+		// Create a new RTCPeerConnection
+
 		conn, err = api.NewPeerConnection(*getTurns())
 		if err != nil {
 			panic(err)
@@ -466,10 +454,10 @@ func (n *Node) handleSDPEvent(signalID string, values interface{}) error {
 		if err := n.CreateVideoTrack("video", videoCodecs[0].PayloadType); err != nil {
 			return err
 		}
-
+		n.setSessionID(sessionID)
+		n.handlePeerEvent(signalID, conn)
 	}
 
-	n.handlePeerEvent(signalID, conn)
 	n.AddSDP(values, signalID)
 	return nil
 }
