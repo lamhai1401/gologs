@@ -33,6 +33,6 @@ func Warn(v ...interface{}) {
 }
 
 // Stack linter
-func Stack(v ...interface{}) {
+func Stack(v ...string) {
 	Log.STACK(v...)
 }
