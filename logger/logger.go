@@ -109,7 +109,7 @@ func (l *FactorLog) serve() {
 		if stacks := l.getStacks(); stacks != nil {
 			// capture current stacks
 			tmp := stacks.Capture()
-			spew.Println(tmp)
+			spew.Dump(tmp)
 		}
 	}
 }
