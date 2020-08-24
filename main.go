@@ -4,7 +4,15 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/segmentio/ksuid"
 )
+
+// GenerateID linter
+func GenerateID() string {
+	id := ksuid.New().String()
+	return id
+}
 
 func test() {
 	resultChann := make(chan string, 10)
@@ -49,7 +57,23 @@ func test() {
 }
 
 func main() {
-	n := NewNode("123")
-	fmt.Println(n)
-	select {}
+	// peers := NewPeers()
+	// peers.start()
+	// select {}
 }
+
+// func connectStomp() {
+// 	url := "signal-controller-testing.quickom.com:443"
+// 	netConn, err := tls.Dial("tcp", url, &tls.Config{})
+// 	if err != nil {
+// 		fmt.Println(err.Error())
+// 	}
+// 	defer netConn.Close()
+
+// 	conn := stomp.New(stomp.Conn(netConn))
+
+// 	err = conn.Connect()
+// 	if err != nil {
+// 		fmt.Println(err.Error())
+// 	}
+// }
