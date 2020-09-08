@@ -7,7 +7,7 @@ import (
 	"github.com/beowulflab/rtcbase/utils"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pion/rtp"
-	"github.com/pion/webrtc/v3"
+	"github.com/pion/webrtc/v2"
 )
 
 // Peer linter
@@ -24,6 +24,7 @@ type Peer struct {
 	remoteVideoTrack  *webrtc.Track
 	videoCodecs       uint8
 	audioCodecs       uint8
+	isConnected       bool
 	isClosed          bool
 }
 
@@ -33,11 +34,12 @@ func newPeer(
 	signalID string,
 ) *Peer {
 	p := &Peer{
-		bitrate:   bitrate,
-		iceCache:  utils.NewAdvanceMap(),
-		sessionID: sessionID,
-		signalID:  signalID,
-		isClosed:  false,
+		bitrate:     bitrate,
+		iceCache:    utils.NewAdvanceMap(),
+		sessionID:   sessionID,
+		signalID:    signalID,
+		isClosed:    false,
+		isConnected: false,
 	}
 
 	return p
@@ -147,7 +149,7 @@ func (p *Peer) AddSDP(values interface{}) error {
 	}
 
 	sdp := &webrtc.SessionDescription{
-		Type: utils.NewSDPType(data.Type),
+		Type: NewSDPType(data.Type),
 		SDP:  data.SDP,
 	}
 

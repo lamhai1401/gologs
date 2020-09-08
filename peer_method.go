@@ -12,8 +12,20 @@ import (
 	"github.com/pion/rtcp"
 	"github.com/pion/rtp"
 	"github.com/pion/sdp/v2"
-	"github.com/pion/webrtc/v3"
+	"github.com/pion/webrtc/v2"
 )
+
+// NewSDPType linter
+func NewSDPType(raw string) webrtc.SDPType {
+	switch raw {
+	case "offer":
+		return webrtc.SDPTypeOffer
+	case "answer":
+		return webrtc.SDPTypeAnswer
+	default:
+		return webrtc.SDPType(webrtc.Unknown)
+	}
+}
 
 func (p *Peer) addAPIWithSDP(values interface{}) (*webrtc.API, error) {
 	// parse sdp
@@ -24,7 +36,7 @@ func (p *Peer) addAPIWithSDP(values interface{}) (*webrtc.API, error) {
 	}
 
 	offer := &webrtc.SessionDescription{
-		Type: utils.NewSDPType(data.Type),
+		Type: NewSDPType(data.Type),
 		SDP:  data.SDP,
 	}
 
@@ -58,10 +70,11 @@ func (p *Peer) addAPIWithSDP(values interface{}) (*webrtc.API, error) {
 			URI: sdedMid,
 		},
 	}
+	fmt.Println(exts)
 
 	se := p.initSettingEngine()
-	se.AddSDPExtensions(webrtc.SDPSectionVideo, exts)
-	se.AddSDPExtensions(webrtc.SDPSectionAudio, exts)
+	// se.AddSDPExtensions(webrtc.SDPSectionVideo, exts)
+	// se.AddSDPExtensions(webrtc.SDPSectionAudio, exts)
 
 	api := webrtc.NewAPI(webrtc.WithMediaEngine(*mediaEngine), webrtc.WithSettingEngine((*se)))
 
@@ -87,12 +100,17 @@ func (p *Peer) newConnection(sdp interface{}, config *webrtc.Configuration) (*we
 
 		return conn, nil
 	}
-	api, err := p.addAPIWithSDP(sdp)
+	// api, err := p.addAPIWithSDP(sdp)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	api := p.addAPI()
+
+	conn, err := api.NewPeerConnection(*config)
 	if err != nil {
 		return nil, err
 	}
-
-	conn, err := api.NewPeerConnection(*config)
 	p.setConn(conn)
 
 	if err := p.createAudioTrack(p.getSessionID(), webrtc.DefaultPayloadTypeOpus); err != nil {
@@ -114,7 +132,7 @@ func (p *Peer) addAPI() *webrtc.API {
 
 	settingEngine := &webrtc.SettingEngine{}
 	// settingEngine.SetEphemeralUDPPortRange(20000, 60000)
-	settingEngine.SetICETimeouts(10*time.Second, 20*time.Second, 1*time.Second)
+	// settingEngine.SetICETimeouts(10*time.Second, 20*time.Second, 1*time.Second)
 
 	api := webrtc.NewAPI(webrtc.WithMediaEngine(*mediaEngine), webrtc.WithSettingEngine(*settingEngine))
 
@@ -424,4 +442,16 @@ func (p *Peer) addAnswer(answer *webrtc.SessionDescription) error {
 		return err
 	}
 	return p.setCacheIce()
+}
+
+func (p *Peer) setConnected() {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+	p.isConnected = true
+}
+
+func (p *Peer) checkConnected() bool {
+	p.mutex.RLock()
+	defer p.mutex.RUnlock()
+	return p.isConnected
 }
