@@ -1,4 +1,4 @@
-package main
+package peer
 
 import (
 	"fmt"
@@ -28,7 +28,8 @@ type Peer struct {
 	isClosed          bool
 }
 
-func newPeer(
+// NewPeer linter
+func NewPeer(
 	bitrate *int,
 	sessionID string,
 	signalID string,
@@ -44,7 +45,9 @@ func newPeer(
 
 	return p
 }
-func (p *Peer) close() {
+
+// Close linter
+func (p *Peer) Close() {
 	if !p.checkClose() {
 		p.setClose(true)
 		p.closeConn()

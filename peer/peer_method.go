@@ -1,4 +1,4 @@
-package main
+package peer
 
 import (
 	"fmt"
@@ -81,7 +81,8 @@ func (p *Peer) addAPIWithSDP(values interface{}) (*webrtc.API, error) {
 	return api, nil
 }
 
-func (p *Peer) newConnection(sdp interface{}, config *webrtc.Configuration) (*webrtc.PeerConnection, error) {
+// NewConnection linter
+func (p *Peer) NewConnection(sdp interface{}, config *webrtc.Configuration) (*webrtc.PeerConnection, error) {
 	if sdp == nil {
 		api := p.addAPI()
 		conn, err := api.NewPeerConnection(*config)
@@ -122,6 +123,11 @@ func (p *Peer) newConnection(sdp interface{}, config *webrtc.Configuration) (*we
 	}
 
 	return conn, nil
+}
+
+// GetSessionID linter
+func (p *Peer) GetSessionID() string {
+	return p.getSessionID()
 }
 
 // NewAPI linter
@@ -220,6 +226,11 @@ func (p *Peer) createVideoTrack(trackID string, codesc uint8) error {
 	return fmt.Errorf("cannot create video track because rtc connection is nil")
 }
 
+// GetConn linter
+func (p *Peer) GetConn() *webrtc.PeerConnection {
+	return p.getConn()
+}
+
 func (p *Peer) getConn() *webrtc.PeerConnection {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
@@ -230,6 +241,11 @@ func (p *Peer) setConn(c *webrtc.PeerConnection) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	p.conn = c
+}
+
+// GetSignalID linter
+func (p *Peer) GetSignalID() string {
+	return p.getSignalID()
 }
 
 func (p *Peer) getSignalID() string {
@@ -395,7 +411,7 @@ func (p *Peer) setCacheIce() error {
 }
 
 // GetLocalDescription get current peer local description
-func (p *Peer) getLocalDescription() (*webrtc.SessionDescription, error) {
+func (p *Peer) GetLocalDescription() (*webrtc.SessionDescription, error) {
 	conn := p.getConn()
 	if conn == nil {
 		return nil, fmt.Errorf("rtc connection is nil")
@@ -444,13 +460,15 @@ func (p *Peer) addAnswer(answer *webrtc.SessionDescription) error {
 	return p.setCacheIce()
 }
 
-func (p *Peer) setConnected() {
+// SetConnected linter
+func (p *Peer) SetConnected() {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	p.isConnected = true
 }
 
-func (p *Peer) checkConnected() bool {
+// CheckConnected linter
+func (p *Peer) CheckConnected() bool {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
 	return p.isConnected
