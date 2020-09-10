@@ -31,7 +31,7 @@ func NewFactorLog() Log {
 	// ftm2 := `%{Color "magenta"}[%{Date}] [%{Time}] %{Color "cyan"}[%{FullFunction}:%{Line}]  %{Color "yellow"}[%{SEVERITY}] %{Color "reset"}[%{Message}]`
 	// frmt := `%{Color "red" "ERROR"}%{Color "yellow" "WARN"}%{Color "green" "INFO"}%{Color "cyan" "DEBUG"}%{Color "blue" "STACK"}[%{Date} %{Time}] [%{SEVERITY}:%{File}:%{Line}] %{Message}%{Color "reset"}`
 
-	frmt := `%{Color "red" "ERROR"}%{Color "yellow" "WARN"}%{Color "green" "INFO"}%{Color "cyan" "DEBUG"}%{Color "blue" "STACK"} [%{Date}] [%{Time}] [%{SEVERITY}] [%{Message}%{Color "reset"}]`
+	frmt := `%{Color "red" "ERROR"}%{Color "yellow" "WARN"}%{Color "green" "INFO"}%{Color "cyan" "DEBUG"}%{Color "blue" "STACK"} [%{Date}] [%{Time "15:04:05.000000000"}] [%{SEVERITY}] [%{Message}%{Color "reset"}]`
 	log := log.New(os.Stdout, log.NewStdFormatter(frmt))
 
 	f := &FactorLog{
