@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/beowulflab/rtcbase/utils"
+	"github.com/beowulflab/rtcbase-v2/utils"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pion/rtp"
 	"github.com/pion/webrtc/v2"

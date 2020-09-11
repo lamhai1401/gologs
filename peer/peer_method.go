@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/beowulflab/rtcbase/utils"
+	"github.com/beowulflab/rtcbase-v2/utils"
 	log "github.com/lamhai1401/gologs/logs"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pion/rtcp"

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lamhai1401/gologs/logs"
 	"github.com/segmentio/ksuid"
 )
 
@@ -58,11 +57,9 @@ func test() {
 }
 
 func main() {
-	// p, _ := NewPeers()
-	// fmt.Println(p)
-	// select {}
-
-	logs.Info("haha")
+	p, _ := NewPeers()
+	fmt.Println(p)
+	select {}
 }
 
 // func connectStomp() {
