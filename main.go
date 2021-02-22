@@ -57,9 +57,6 @@ func test() {
 }
 
 func main() {
-	p, _ := NewPeers()
-	fmt.Println(p)
-	select {}
 }
 
 // func connectStomp() {

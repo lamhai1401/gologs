@@ -1,6 +1,8 @@
 package logs
 
 import (
+	"os"
+
 	"github.com/lamhai1401/gologs/logger"
 )
 
@@ -24,7 +26,9 @@ func Info(v ...interface{}) {
 
 // Debug export none error log
 func Debug(v ...interface{}) {
-	Log.DEBUG(v...)
+	if os.Getenv("DEBUG") == "1" {
+		Log.DEBUG(v...)
+	}
 }
 
 // Warn export none error log
