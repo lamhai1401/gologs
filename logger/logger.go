@@ -2,6 +2,7 @@ package logger
 
 import (
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -104,7 +105,7 @@ func (l *FactorLog) setStack(id string, count int) {
 
 // serve print stacking
 func (l *FactorLog) serve() {
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(time.Duration(getInterval()) * time.Second)
 	for range ticker.C {
 		if stacks := l.getStacks(); stacks != nil {
 			// capture current stacks
@@ -112,4 +113,15 @@ func (l *FactorLog) serve() {
 			spew.Dump(tmp)
 		}
 	}
+}
+
+func getInterval() int {
+	i := 15
+	if interval := os.Getenv("LOG_INTERVAL"); interval != "" {
+		j, err := strconv.Atoi(interval)
+		if err == nil {
+			i = j
+		}
+	}
+	return i
 }
