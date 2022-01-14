@@ -19,28 +19,28 @@ func init() {
 // Error export error log
 func Error(v ...interface{}) {
 	if OffLog != "1" {
-		Log.ERROR(v...)
+		go Log.ERROR(v...)
 	}
 }
 
 // Info export none error log
 func Info(v ...interface{}) {
 	if OffLog != "1" {
-		Log.INFO(v...)
+		go Log.INFO(v...)
 	}
 }
 
 // Debug export none error log
 func Debug(v ...interface{}) {
 	if os.Getenv("DEBUG") == "1" && OffLog != "1" {
-		Log.DEBUG(v...)
+		go Log.DEBUG(v...)
 	}
 }
 
 // Warn export none error log
 func Warn(v ...interface{}) {
 	if OffLog != "1" {
-		Log.WARN(v...)
+		go Log.WARN(v...)
 	}
 }
 
@@ -49,5 +49,5 @@ func Stack(v ...string) {
 	// if OffLog != "1" {
 	// 	Log.STACK(v...)
 	// }
-	Log.STACK(v...)
+	go Log.STACK(v...)
 }
