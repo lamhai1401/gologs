@@ -23,6 +23,7 @@ type Log interface {
 	DEBUG(v ...interface{})
 	STACK(v ...string)
 	AddTag(tag string) *log.Entry
+	AddCustomTag(tagName, value string) *log.Entry
 }
 
 // FactorLog custom log with factor pkg
@@ -141,6 +142,12 @@ func NewFactorLog() Log {
 func formatFilePath(path string) string {
 	arr := strings.Split(path, "/")
 	return arr[len(arr)-1]
+}
+
+func (l *FactorLog) AddCustomTag(tagName, value string) *log.Entry {
+	return l.log.WithFields(log.Fields{
+		tagName: value,
+	})
 }
 
 // AddTag add Tag for check log

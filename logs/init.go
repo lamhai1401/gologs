@@ -56,3 +56,7 @@ func Stack(v ...string) {
 func AddTag(tag string) *logrus.Entry {
 	return Log.AddTag(tag)
 }
+
+func AddCustomTag(tagName, value string) *logrus.Entry {
+	return Log.AddCustomTag(tagName, value)
+}
