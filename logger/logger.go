@@ -30,6 +30,7 @@ type FactorLog struct {
 	// frmt   string      // format style log
 	stacks *AdvanceMap // save for debug logs
 	log    *log.Logger // log
+	// chann  chan int
 	// mutex  sync.RWMutex
 }
 
@@ -50,16 +51,28 @@ type FactorLog struct {
 // 	return f
 // }
 
+// var (
+// 	ctx    context.Context
+// 	cancel context.CancelFunc
+// 	temp   chan int
+// )
+
 const (
-	sdtMode  = "std"
-	fileMode = "file"
+	sdtErrMode = "stderr"
+	sdtOutMode = "stdout"
+	fileMode   = "file"
 )
 
 func NewFactorLog() Log {
 	LogLevel := log.DebugLevel
 	myLog := log.New()
+
+	// add context
+	// ctx, _ := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	// myLog.WithContext(ctx)
+
 	// setup log level
-	LogMode := sdtMode
+	LogMode := sdtOutMode
 	if mode := os.Getenv("LOG_MODE"); mode != "" {
 		LogMode = mode
 	}
@@ -71,9 +84,12 @@ func NewFactorLog() Log {
 	}
 	myLog.SetLevel(LogLevel)
 
+	// setting mode
 	switch LogMode {
-	case sdtMode:
+	case sdtOutMode:
 		myLog.SetOutput(os.Stdout)
+	case sdtErrMode:
+		myLog.SetOutput(os.Stderr)
 	case fileMode:
 		// add folder Log
 		newpath := filepath.Join(".", "nodeLog")
@@ -93,6 +109,8 @@ func NewFactorLog() Log {
 		// myLog.ReportCaller = true
 		// setting out put file
 		myLog.SetOutput(f)
+	default:
+		myLog.SetOutput(os.Stdout)
 	}
 
 	// format type
@@ -113,6 +131,7 @@ func NewFactorLog() Log {
 	factorlog := &FactorLog{
 		log:    myLog,
 		stacks: NewAdvanceMap(),
+		// chann:  make(chan int, 100),
 	}
 
 	go factorlog.serve()
@@ -131,30 +150,52 @@ func (l *FactorLog) AddTag(tag string) *log.Entry {
 	})
 }
 
+func (l *FactorLog) writeLog(level log.Level, args ...interface{}) {
+	go l.log.Log(level, args...)
+	// ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+
+	// defer func() {
+	// 	ctx = nil
+	// 	cancel = nil
+	// }()
+
+	// go func() {
+	// 	l.log.Log(level, args...)
+	// 	l.chann <- 1
+	// }()
+
+	// select {
+	// case <-l.chann:
+	// 	cancel()
+	// case <-ctx.Done():
+	// 	return
+	// }
+}
+
 // DEBUG linter auto println
 func (l *FactorLog) DEBUG(v ...interface{}) {
-	l.log.Debug(v...)
+	l.writeLog(log.DebugLevel, v...)
 }
 
 // ERROR linter auto println
 func (l *FactorLog) ERROR(v ...interface{}) {
-	l.log.Error(v...)
+	l.writeLog(log.ErrorLevel, v...)
 }
 
 // INFO linter auto println
 func (l *FactorLog) INFO(v ...interface{}) {
-	l.log.Info(v...)
+	l.writeLog(log.InfoLevel, v...)
 }
 
 // WARN linter auto println
 func (l *FactorLog) WARN(v ...interface{}) {
-	l.log.Warn(v...)
+	l.writeLog(log.WarnLevel, v...)
 }
 
 // STACK linter auto println
 func (l *FactorLog) STACK(values ...string) {
 	// find exist, if exist incre, not create
-	l.stack(values...)
+	go l.stack(values...)
 }
 
 // stack linter
