@@ -47,10 +47,10 @@ func Warn(v ...interface{}) {
 
 // Stack linter
 func Stack(v ...string) {
-	// if OffLog != "1" {
-	// 	Log.STACK(v...)
-	// }
-	Log.STACK(v...)
+	if OffLog != "1" {
+		Log.STACK(v...)
+	}
+	// Log.STACK(v...)
 }
 
 func AddTag(tag string) *logrus.Entry {
