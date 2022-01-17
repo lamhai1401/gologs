@@ -92,7 +92,7 @@ func NewFactorLog() Log {
 	}
 	myLog.SetFormatter(Formatter)
 
-	myLog.ReportCaller = true
+	// myLog.ReportCaller = true
 	// setting out put file
 	myLog.SetOutput(f)
 
