@@ -50,10 +50,19 @@ type FactorLog struct {
 // 	return f
 // }
 
+const (
+	sdtMode  = "std"
+	fileMode = "file"
+)
+
 func NewFactorLog() Log {
 	LogLevel := log.DebugLevel
 	myLog := log.New()
 	// setup log level
+	LogMode := sdtMode
+	if mode := os.Getenv("LOG_MODE"); mode != "" {
+		LogMode = mode
+	}
 	if lv := os.Getenv("LOG_LEVEL"); lv != "" {
 		LogLV, err := log.ParseLevel(lv)
 		if err == nil {
@@ -62,20 +71,29 @@ func NewFactorLog() Log {
 	}
 	myLog.SetLevel(LogLevel)
 
-	// add folder Log
-	newpath := filepath.Join(".", "nodeLog")
-	os.MkdirAll(newpath, os.ModePerm)
-	nodeID := os.Getenv("NODE_ID")
-	if nodeID == "" {
-		nodeID = "nodeID"
+	switch LogMode {
+	case sdtMode:
+		myLog.SetOutput(os.Stdout)
+	case fileMode:
+		// add folder Log
+		newpath := filepath.Join(".", "nodeLog")
+		os.MkdirAll(newpath, os.ModePerm)
+		nodeID := os.Getenv("NODE_ID")
+		if nodeID == "" {
+			nodeID = "nodeID"
+		}
+		roomID := os.Getenv("SIGNAL_ROOM_ID")
+		if roomID == "" {
+			roomID = "roomID"
+		}
+		filename := fmt.Sprintf("./%s/%s-%s-out.log", newpath, roomID, nodeID)
+		fmt.Println("Start writing log file: ", filename)
+		f, _ := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+
+		// myLog.ReportCaller = true
+		// setting out put file
+		myLog.SetOutput(f)
 	}
-	roomID := os.Getenv("SIGNAL_ROOM_ID")
-	if roomID == "" {
-		roomID = "roomID"
-	}
-	filename := fmt.Sprintf("./%s/%s-%s-out.log", newpath, roomID, nodeID)
-	fmt.Println("Start writing log file: ", filename)
-	f, _ := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 
 	// format type
 	Formatter := new(log.TextFormatter)
@@ -91,10 +109,6 @@ func NewFactorLog() Log {
 		return "", fmt.Sprintf("%s:%d", formatFilePath(f.File), f.Line)
 	}
 	myLog.SetFormatter(Formatter)
-
-	// myLog.ReportCaller = true
-	// setting out put file
-	myLog.SetOutput(f)
 
 	factorlog := &FactorLog{
 		log:    myLog,
