@@ -92,7 +92,7 @@ func (a *AdvanceMap) Iter(callBack func(key, value interface{}) bool) {
 // Capture a current map
 // Warning: Current data will be delete after using it
 func (a *AdvanceMap) Capture() map[string]interface{} {
-	tempMap := make(map[string]interface{}, 0)
+	tempMap := make(map[string]interface{})
 	tempFunc := func(key, value interface{}) bool {
 		keyStr, ok := key.(string)
 		if ok {

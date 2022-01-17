@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/lamhai1401/gologs/logger"
+	"github.com/sirupsen/logrus"
 )
 
 // Log linter
@@ -19,28 +20,28 @@ func init() {
 // Error export error log
 func Error(v ...interface{}) {
 	if OffLog != "1" {
-		go Log.ERROR(v...)
+		Log.ERROR(v...)
 	}
 }
 
 // Info export none error log
 func Info(v ...interface{}) {
 	if OffLog != "1" {
-		go Log.INFO(v...)
+		Log.INFO(v...)
 	}
 }
 
 // Debug export none error log
 func Debug(v ...interface{}) {
-	if os.Getenv("DEBUG") == "1" && OffLog != "1" {
-		go Log.DEBUG(v...)
+	if OffLog != "1" {
+		Log.DEBUG(v...)
 	}
 }
 
 // Warn export none error log
 func Warn(v ...interface{}) {
 	if OffLog != "1" {
-		go Log.WARN(v...)
+		Log.WARN(v...)
 	}
 }
 
@@ -49,5 +50,9 @@ func Stack(v ...string) {
 	// if OffLog != "1" {
 	// 	Log.STACK(v...)
 	// }
-	go Log.STACK(v...)
+	Log.STACK(v...)
+}
+
+func AddTag(tag string) *logrus.Entry {
+	return Log.AddTag(tag)
 }
