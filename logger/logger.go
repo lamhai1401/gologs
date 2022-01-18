@@ -120,13 +120,12 @@ func NewFactorLog() Log {
 			roomID = "roomID"
 		}
 		filename := fmt.Sprintf("./%s/%s-%s-out.log", newpath, roomID, nodeID)
-		fmt.Println("Start writing log file: ", filename)
 		f, _ := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
-
 		// myLog.ReportCaller = true
 		// setting out put file
 		myLog.SetOutput(f)
 		factorlog.f = f
+		myLog.Debug("Start writing log file: ", filename)
 	default:
 		myLog.SetOutput(os.Stdout)
 	}
