@@ -15,6 +15,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var OffLog string
+
+func init() {
+	// logging = newLogger()
+	OffLog = os.Getenv("OFF_LOG")
+
+}
+
 // Log default method
 type Log interface {
 	ERROR(v ...interface{})
@@ -28,12 +36,15 @@ type Log interface {
 
 // FactorLog custom log with factor pkg
 type FactorLog struct {
+	f *os.File
 	// frmt   string      // format style log
 	stacks *AdvanceMap // save for debug logs
 	log    *log.Logger // log
 	// chann  chan int
-	// mutex  sync.RWMutex
+	// mutex sync.RWMutex
 }
+
+// func (f *FactorLog) setFile(g)
 
 // // NewFactorLog return new log with factor pkg
 // func NewFactorLog() Log {
@@ -85,6 +96,11 @@ func NewFactorLog() Log {
 	}
 	myLog.SetLevel(LogLevel)
 
+	factorlog := &FactorLog{
+		log:    myLog,
+		stacks: NewAdvanceMap(),
+	}
+
 	// setting mode
 	switch LogMode {
 	case sdtOutMode:
@@ -110,6 +126,7 @@ func NewFactorLog() Log {
 		// myLog.ReportCaller = true
 		// setting out put file
 		myLog.SetOutput(f)
+		factorlog.f = f
 	default:
 		myLog.SetOutput(os.Stdout)
 	}
@@ -128,12 +145,6 @@ func NewFactorLog() Log {
 		return "", fmt.Sprintf("%s:%d", formatFilePath(f.File), f.Line)
 	}
 	myLog.SetFormatter(Formatter)
-
-	factorlog := &FactorLog{
-		log:    myLog,
-		stacks: NewAdvanceMap(),
-		// chann:  make(chan int, 100),
-	}
 
 	go factorlog.serve()
 	return factorlog
@@ -158,25 +169,9 @@ func (l *FactorLog) AddTag(tag string) *log.Entry {
 }
 
 func (l *FactorLog) writeLog(level log.Level, args ...interface{}) {
-	go l.log.Log(level, args...)
-	// ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-
-	// defer func() {
-	// 	ctx = nil
-	// 	cancel = nil
-	// }()
-
-	// go func() {
-	// 	l.log.Log(level, args...)
-	// 	l.chann <- 1
-	// }()
-
-	// select {
-	// case <-l.chann:
-	// 	cancel()
-	// case <-ctx.Done():
-	// 	return
-	// }
+	if OffLog != "1" {
+		go l.log.Log(level, args...)
+	}
 }
 
 // DEBUG linter auto println
@@ -243,7 +238,12 @@ func (l *FactorLog) serve() {
 		if stacks := l.getStacks(); stacks != nil {
 			// capture current stacks
 			tmp := stacks.Capture()
-			spew.Dump(tmp)
+
+			if l.f != nil {
+				spew.Fdump(l.f, tmp)
+			} else {
+				spew.Dump(tmp)
+			}
 		}
 	}
 }
