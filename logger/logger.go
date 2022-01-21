@@ -29,6 +29,7 @@ type Log interface {
 	INFO(v ...interface{})
 	WARN(v ...interface{})
 	DEBUG(v ...interface{})
+	DEBUGSPEW(v ...interface{})
 	STACK(v ...string)
 	AddTag(tag string) *log.Entry
 	AddCustomTag(tagName, value string) *log.Entry
@@ -36,7 +37,8 @@ type Log interface {
 
 // FactorLog custom log with factor pkg
 type FactorLog struct {
-	f *os.File
+	level log.Level
+	f     *os.File
 	// frmt   string      // format style log
 	stacks *AdvanceMap // save for debug logs
 	log    *log.Logger // log
@@ -97,6 +99,7 @@ func NewFactorLog() Log {
 	myLog.SetLevel(LogLevel)
 
 	factorlog := &FactorLog{
+		level:  LogLevel,
 		log:    myLog,
 		stacks: NewAdvanceMap(),
 	}
@@ -108,9 +111,10 @@ func NewFactorLog() Log {
 	case sdtErrMode:
 		myLog.SetOutput(os.Stderr)
 	case fileMode:
-		// add folder Log
-		newpath := filepath.Join(".", "nodeLog")
-		os.MkdirAll(newpath, os.ModePerm)
+		logPath := os.Getenv("LOG_PATH")
+		if logPath == "" {
+			logPath = "/var/log/classroom-core/"
+		}
 		nodeID := os.Getenv("NODE_ID")
 		if nodeID == "" {
 			nodeID = "nodeID"
@@ -119,6 +123,10 @@ func NewFactorLog() Log {
 		if roomID == "" {
 			roomID = "roomID"
 		}
+		// add folder Log
+		newpath := filepath.Join(logPath, "/", roomID)
+		os.MkdirAll(newpath, os.ModePerm)
+
 		filename := fmt.Sprintf("./%s/%s-%s-out.log", newpath, roomID, nodeID)
 		f, _ := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 		// myLog.ReportCaller = true
@@ -176,6 +184,19 @@ func (l *FactorLog) writeLog(level log.Level, args ...interface{}) {
 // DEBUG linter auto println
 func (l *FactorLog) DEBUG(v ...interface{}) {
 	l.writeLog(log.DebugLevel, v...)
+}
+
+// DEBUG linter auto println
+func (l *FactorLog) DEBUGSPEW(v ...interface{}) {
+	// l.writeLog(log.DebugLevel, v...)
+	if l.level != log.DebugLevel {
+		return
+	}
+	if l.f != nil {
+		spew.Fdump(l.f, v...)
+	} else {
+		spew.Dump(v...)
+	}
 }
 
 // ERROR linter auto println
