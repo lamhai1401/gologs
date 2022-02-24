@@ -29,6 +29,11 @@ func Debug(v ...interface{}) {
 	Log.DEBUG(v...)
 }
 
+// DebugSpew export none error log
+func DebugSpew(v ...interface{}) {
+	Log.DEBUGSPEW(v...)
+}
+
 // Warn export none error log
 func Warn(v ...interface{}) {
 	Log.WARN(v...)
