@@ -23,6 +23,11 @@ func init() {
 
 }
 
+type LogMsg struct {
+	levle log.Level
+	msg   []interface{}
+}
+
 // Log default method
 type Log interface {
 	ERROR(v ...interface{})
@@ -44,6 +49,8 @@ type FactorLog struct {
 	log    *log.Logger // log
 	// chann  chan int
 	// mutex sync.RWMutex
+
+	msgChann chan *LogMsg
 }
 
 // func (f *FactorLog) setFile(g)
@@ -99,9 +106,10 @@ func NewFactorLog() Log {
 	myLog.SetLevel(LogLevel)
 
 	factorlog := &FactorLog{
-		level:  LogLevel,
-		log:    myLog,
-		stacks: NewAdvanceMap(),
+		level:    LogLevel,
+		log:      myLog,
+		stacks:   NewAdvanceMap(),
+		msgChann: make(chan *LogMsg, 1024),
 	}
 
 	// setting mode
@@ -154,7 +162,18 @@ func NewFactorLog() Log {
 	myLog.SetFormatter(Formatter)
 
 	go factorlog.serve()
+	go factorlog.readMsg()
 	return factorlog
+}
+
+func (l *FactorLog) readMsg() {
+	for {
+		msg, open := <-l.msgChann
+		if !open {
+			return
+		}
+		l.log.Log(msg.levle, msg.msg...)
+	}
 }
 
 func formatFilePath(path string) string {
@@ -177,7 +196,11 @@ func (l *FactorLog) AddTag(tag string) *log.Entry {
 
 func (l *FactorLog) writeLog(level log.Level, args ...interface{}) {
 	if OffLog != "1" {
-		go l.log.Log(level, args...)
+		// go l.log.Log(level, args...)
+		l.msgChann <- &LogMsg{
+			levle: level,
+			msg:   args,
+		}
 	}
 }
 
