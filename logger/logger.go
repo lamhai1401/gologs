@@ -24,7 +24,7 @@ func init() {
 }
 
 type LogMsg struct {
-	levle log.Level
+	level log.Level
 	msg   []interface{}
 }
 
@@ -167,12 +167,16 @@ func NewFactorLog() Log {
 }
 
 func (l *FactorLog) readMsg() {
+	var open bool
+	var msg *LogMsg
 	for {
-		msg, open := <-l.msgChann
+		msg, open = <-l.msgChann
 		if !open {
 			return
 		}
-		l.log.Log(msg.levle, msg.msg...)
+		l.log.Log(msg.level, msg.msg...)
+
+		msg = nil
 	}
 }
 
@@ -198,7 +202,7 @@ func (l *FactorLog) writeLog(level log.Level, args ...interface{}) {
 	if OffLog != "1" {
 		// go l.log.Log(level, args...)
 		l.msgChann <- &LogMsg{
-			levle: level,
+			level: level,
 			msg:   args,
 		}
 	}
