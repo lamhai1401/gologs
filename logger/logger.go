@@ -287,9 +287,9 @@ func (l *FactorLog) serve() {
 			tmp := stacks.Capture()
 
 			if l.f != nil {
-				spew.Fdump(l.f, tmp)
+				spew.Fdump(l.f, time.Now(), tmp)
 			} else {
-				spew.Dump(tmp)
+				spew.Dump(time.Now(), tmp)
 			}
 		}
 	}
