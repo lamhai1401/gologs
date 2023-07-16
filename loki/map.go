@@ -1,4 +1,4 @@
-package main
+package loki
 
 import (
 	"sync"
@@ -92,7 +92,7 @@ func (a *AdvanceMap) Iter(callBack func(key, value interface{}) bool) {
 // Capture a current map
 // Warning: Current data will be delete after using it
 func (a *AdvanceMap) Capture() map[string]interface{} {
-	tempMap := make(map[string]interface{}, 0)
+	tempMap := make(map[string]interface{})
 	tempFunc := func(key, value interface{}) bool {
 		keyStr, ok := key.(string)
 		if ok {
@@ -107,21 +107,6 @@ func (a *AdvanceMap) Capture() map[string]interface{} {
 			tempFunc(key, value)
 			// delete value
 			a.Delete(key)
-			return true
-		})
-	}
-	return tempMap
-}
-
-// ToMap returning map to this value
-func (a *AdvanceMap) ToMap() map[string]interface{} {
-	tempMap := make(map[string]interface{}, 0)
-	if items := a.getItems(); items != nil {
-		items.Range(func(key, value interface{}) bool {
-			keyStr, ok := key.(string)
-			if ok {
-				tempMap[keyStr] = value
-			}
 			return true
 		})
 	}
