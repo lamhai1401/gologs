@@ -40,9 +40,15 @@ type Loki struct {
 	hostname  string
 	data      map[model.LabelName]model.LabelValue
 	wg        sync.WaitGroup
+	username  string // basic auth
+	password  string
 }
 
-func NewLoki(URL string, batchSize int, batchWait time.Duration) (*Loki, error) {
+func NewLoki(
+	URL string,
+	batchSize int,
+	batchWait time.Duration,
+) (*Loki, error) {
 	hostname, err := os.Hostname()
 	if err != nil {
 		return nil, err
@@ -215,6 +221,11 @@ func (l *Loki) send(ctx context.Context, buf []byte) (int, error) {
 	if err != nil {
 		return -1, err
 	}
+
+	if l.username != "" && l.password != "" {
+		req.SetBasicAuth(l.username, l.password)
+	}
+
 	req = req.WithContext(ctx)
 	req.Header.Set("Content-Type", contentType)
 
@@ -233,4 +244,9 @@ func (l *Loki) send(ctx context.Context, buf []byte) (int, error) {
 		err = fmt.Errorf("server returned HTTP status %s (%d): %s", resp.Status, resp.StatusCode, line)
 	}
 	return resp.StatusCode, err
+}
+
+func (l *Loki) SetBasicAuth(username, password string) {
+	l.username = username
+	l.password = password
 }

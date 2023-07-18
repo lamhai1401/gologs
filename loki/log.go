@@ -28,6 +28,7 @@ type Log interface {
 	STACK(msg ...string)
 	DEBUGSPEW(msg string, tags map[string]any)
 	AddHook(log.Hook)
+	SetBasicAuth(username, password string)
 }
 
 type LogMsg struct {
@@ -50,6 +51,7 @@ type logger struct {
 
 	hostname string
 	msgChann chan *LogMsg
+	loki     *Loki
 }
 
 func NewLoggerWithLoki(URL string, batchSize int, batchWait time.Duration) (*logger, error) {
@@ -59,11 +61,11 @@ func NewLoggerWithLoki(URL string, batchSize int, batchWait time.Duration) (*log
 	}
 	logger := NewLogger()
 	logger.AddHook(client)
+	logger.loki = client
 	return logger, nil
 }
 
 func NewLogger() *logger {
-
 	LogLevel := log.DebugLevel
 	myLog := log.New()
 
@@ -271,4 +273,8 @@ func (l *logger) STACK(values ...string) {
 }
 func (l *logger) AddHook(hook log.Hook) {
 	l.log.AddHook(hook)
+}
+
+func (l *logger) SetBasicAuth(username, password string) {
+	l.loki.SetBasicAuth(username, password)
 }
